@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hue Hunt // Visuals By Bidharva</title>
+    <title>Hue Hunt // Color Guesser</title>
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -34,7 +34,7 @@
 
         /* Raw, flat color blocks */
         .color-block {
-            border: 8px solid #000000; /* Thicker border */
+            border: 12px solid #000000; /* Thicker border */
             background-color: #ffffff;
             transition: all 0.1s ease;
         }
@@ -42,9 +42,10 @@
         /* Custom color wheel styling */
         #colorWheelCanvas {
             cursor: crosshair;
-            border: 8px solid #000000; /* Thicker border */
-            /* Add this to prevent border collapse on some browsers */
-            box-sizing: content-box;
+            border: 12px solid #000000; /* Thicker border */
+            /* Display size, let browser handle the anti-aliasing */
+            width: 250px;
+            height: 250px;
         }
 
         /* Bold, pressable button style */
@@ -138,6 +139,22 @@
             color: #000000;
             text-transform: uppercase;
         }
+
+        /* How to Play section style */
+        .how-to-play {
+            border: 4px solid #000000;
+            background-color: #ffffff;
+        }
+        .how-to-play-summary {
+            font-weight: bold;
+            text-transform: uppercase;
+            padding: 1rem;
+            cursor: pointer;
+            outline: none;
+        }
+        .how-to-play-summary::marker {
+            color: #F34355;
+        }
     </style>
 </head>
 <body class="p-0">
@@ -162,6 +179,20 @@
             Match the target color using the wheel to see how close you can get.
         </p>
 
+        <!-- How to Play section -->
+        <details class="how-to-play w-full mb-8">
+            <summary class="how-to-play-summary text-center">How to Play</summary>
+            <div class="p-4 border-t-2 border-black">
+                <ul class="list-disc list-inside text-left space-y-2">
+                    <li>A random color will appear in the "Target Color" block.</li>
+                    <li>Use the color wheel to select a color you think is the best match. **On mobile, simply tap and drag on the wheel to pick your color.**</li>
+                    <li>Click the **Guess** button to see your score.</li>
+                    <li>Your score is a percentage of how close your guess is to the target color.</li>
+                    <li>Click the **New Game** button to start a new round.</li>
+                </ul>
+            </div>
+        </details>
+
         <!-- Game area: Target color and color wheel -->
         <div class="flex flex-col sm:flex-row items-center justify-around gap-8 mb-10 w-full">
             <!-- Target color block -->
@@ -172,7 +203,7 @@
             
             <!-- Custom Color Wheel -->
             <div class="w-full sm:w-1/2 flex justify-center">
-                <canvas id="colorWheelCanvas" width="250" height="250" class="rounded-full"></canvas>
+                <canvas id="colorWheelCanvas" width="500" height="500" class="rounded-full"></canvas>
             </div>
         </div>
         
@@ -188,11 +219,11 @@
 
             <!-- Action buttons -->
             <div class="flex flex-col sm:flex-row gap-4">
-                <button id="newGameButton" class="w-full text-xl py-4 px-8 rounded-none brutalist-button">
-                    New Game
-                </button>
                 <button id="guessButton" class="w-full text-xl py-4 px-8 rounded-none brutalist-button">
                     Guess
+                </button>
+                <button id="newGameButton" class="w-full text-xl py-4 px-8 rounded-none brutalist-button">
+                    New Game
                 </button>
             </div>
         </div>
@@ -217,6 +248,10 @@
         let targetRgb = { r: 0, g: 0, b: 0 };
         let userRgb = { r: 255, g: 255, b: 255 };
         let isDragging = false;
+        
+        const CANVAS_SIZE = 500;
+        colorWheelCanvas.width = CANVAS_SIZE;
+        colorWheelCanvas.height = CANVAS_SIZE;
 
         // --- Utility Functions ---
 
@@ -349,7 +384,12 @@
          * @returns {{r: number, g: number, b: number} | null} The RGB color object or null.
          */
         function getColorFromCanvas(x, y) {
-            const pixelData = ctx.getImageData(x, y, 1, 1).data;
+            const rect = colorWheelCanvas.getBoundingClientRect();
+            const scaleX = colorWheelCanvas.width / rect.width;
+            const scaleY = colorWheelCanvas.height / rect.height;
+            const canvasX = x * scaleX;
+            const canvasY = y * scaleY;
+            const pixelData = ctx.getImageData(canvasX, canvasY, 1, 1).data;
             if (pixelData[3] === 0) return null; // Transparent pixel, outside the wheel
             return { r: pixelData[0], g: pixelData[1], b: pixelData[2] };
         }
